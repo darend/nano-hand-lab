@@ -1,0 +1,8 @@
+[project]
+name = "nano-hand-lab"
+version = "0.1.0"
+description = "Learning to program the servos of The Robot Studio's Robot Nano Hand"
+requires-python = ">=3.14"
+dependencies = [
+    "pyserial>=3.5",
+]
