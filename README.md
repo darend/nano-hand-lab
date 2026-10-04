@@ -70,10 +70,8 @@ cd nano-hand-lab
 
 This makes a folder called `nano-hand-lab` in your home folder.
 
-- **A box pops up asking to install "command line developer tools":** click **Install**, wait
-  for it to finish, then run the `git clone` line again.
-- **It asks for a username and password:** the repo is private and your GitHub account
-  needs access. Ask whoever shared it with you.
+If a box pops up asking to install **"command line developer tools"**, click **Install**, wait
+for it to finish, then run the `git clone` line again.
 
 You don't need to install Python yourself. The first time you run something, uv downloads
 the right version (3.14) and the libraries listed in `pyproject.toml`.
