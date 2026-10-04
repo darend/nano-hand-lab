@@ -342,4 +342,4 @@ From step 3 of the Robot Nano Hand build guide:
 
 The code in this repo is released under the [MIT License](LICENSE). The Robot Nano Hand design
 itself belongs to The Robot Studio; see [their repo](https://github.com/TheRobotStudio/robot-nano-hand)
-for its licence.
+for its license.
