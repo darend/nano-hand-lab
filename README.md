@@ -8,6 +8,13 @@ with 4 fingers, a thumb and a wrist, moved by 11 small servo motors.
 Right now the servos are loose on the desk. The goal is to learn how to talk to them
 before they go into the hand.
 
+**Contents:** [What you need](#what-you-need) ·
+[Terminal basics](#terminal-basics) · [Getting started](#getting-started) ·
+[Every time you come back](#every-time-you-come-back) · [Editing code](#editing-code) ·
+[Playing in Python](#playing-in-python) · [How the servos talk](#how-the-servos-talk) ·
+[What's in the script](#whats-in-the-script) · [Things to try](#things-to-try) ·
+[Troubleshooting](#troubleshooting) · [Words you'll see](#words-youll-see)
+
 ## What you need
 
 | Part | What it does |
@@ -17,29 +24,56 @@ before they go into the hand.
 | **6 V** power supply (5 A) | Powers the servos. USB alone is not enough. |
 | A Mac | Runs the Python code. |
 
+## Terminal basics
+
+You'll type commands into **Terminal**, a text window for talking to the Mac.
+
+- **Open it:** press **⌘ Space**, type `Terminal`, press **Return**.
+- **Run a command:** type it (or paste it with **⌘ V**) and press **Return**.
+- **Stop a running program:** press **Control C** (the `control` key, not ⌘).
+- **Run the last command again:** press **↑**, then **Return**.
+- **Fill in a long name:** type the first few letters and press **Tab**.
+- **Where am I?** `pwd` shows the folder you're in. `ls` lists what's in it.
+  `cd folder-name` moves into a folder. `cd ..` moves back out. `cd ~` goes home.
+
+In this guide, grey boxes are commands to type. Type them one line at a time.
+
 ## Getting started
 
-### 1. Install uv (once)
+You only do these steps once.
 
-[uv](https://docs.astral.sh/uv/) installs Python and everything this project needs. Open
-**Terminal** and paste:
+### 1. Install uv
+
+[uv](https://docs.astral.sh/uv/) installs Python and everything this project needs. In
+Terminal, paste:
 
 ```
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Close Terminal and open it again so it finds `uv`. Check it worked:
+**Quit Terminal (⌘ Q) and open it again** so it finds `uv`. Check it worked:
 
 ```
 uv --version
 ```
 
+You should see something like `uv 0.12.23`. If you see `command not found`, quit and reopen
+Terminal again.
+
 ### 2. Get the code
 
 ```
+cd ~
 git clone https://github.com/darend/nano-hand-lab.git
 cd nano-hand-lab
 ```
+
+This makes a folder called `nano-hand-lab` in your home folder.
+
+- **A box pops up asking to install "command line developer tools":** click **Install**, wait
+  for it to finish, then run the `git clone` line again.
+- **It asks for a username and password:** the repo is private and your GitHub account
+  needs access. Ask whoever shared it with you.
 
 You don't need to install Python yourself. The first time you run something, uv downloads
 the right version (3.14) and the libraries listed in `pyproject.toml`.
@@ -56,18 +90,24 @@ the right version (3.14) and the libraries listed in `pyproject.toml`.
 
 1. Plug one servo into the adapter.
 2. Plug in the 6 V supply.
-3. Plug the adapter into the Mac with USB-C.
+3. Plug the adapter into the Mac with USB-C. If the Mac asks **"Allow accessory to
+   connect?"**, click **Allow**.
 
 ### 4. Find the adapter's port
+
+The "port" is the name the Mac gives the adapter.
 
 ```
 ls /dev/cu.*
 ```
 
 Look for something like `/dev/cu.usbserial-1410` or `/dev/cu.wchusbserial1410`. That's the
-adapter. If you only see `Bluetooth-Incoming-Port` and `debug-console`, check the USB cable.
-If it still doesn't appear, install the
-[WCH CH34x driver](https://www.wch-ic.com/downloads/CH34XSER_MAC_ZIP.html).
+adapter. Write it down; you'll use it a lot. The number can change if you plug into a
+different USB socket.
+
+If you only see `Bluetooth-Incoming-Port` and `debug-console`, unplug the adapter, plug it
+back in and try again. If it still doesn't appear, install the
+[WCH CH34x driver](https://www.wch-ic.com/downloads/CH34XSER_MAC_ZIP.html) and restart the Mac.
 
 ### 5. Run the first script
 
@@ -77,13 +117,13 @@ Use your own port name from step 4:
 uv run servo_first_steps.py /dev/cu.usbserial-1410
 ```
 
-The script:
+The first run takes a little longer while uv downloads Python. Then the script:
 
 1. **Pings** the servo to check it's there.
 2. **Reads** its model number and position.
 3. **Moves** it to 512 → 400 → 624 → 512.
 4. **Switches torque off** so you can turn the horn by hand and watch the position change.
-   Press **Ctrl-C** to stop.
+   Press **Control C** to stop.
 
 It prints every message it sends (`->`) and every reply (`<-`) as hex bytes:
 
@@ -94,7 +134,80 @@ It prints every message it sends (`->`) and every reply (`<-`) as hex bytes:
    It answered!
 ```
 
-Add `--quiet` to hide the bytes, or `--id 3` to talk to a servo with a different ID.
+Add `--quiet` to hide the bytes, or `--id 3` to talk to a servo with a different ID:
+
+```
+uv run servo_first_steps.py /dev/cu.usbserial-1410 --quiet
+```
+
+## Every time you come back
+
+1. Wire it up again (jumper on **B**, 6 V, USB).
+2. Open Terminal and go to the project folder:
+   ```
+   cd ~/nano-hand-lab
+   ```
+3. Get any updates:
+   ```
+   git pull
+   ```
+4. Run things with `uv run`.
+
+If `git pull` complains that your changes would be overwritten, you edited a file that also
+changed online. See [Editing code](#editing-code) for how to avoid that.
+
+## Editing code
+
+Use a code editor, not TextEdit. **[Visual Studio Code](https://code.visualstudio.com/)** is
+free and good:
+
+1. Download it, drag it to **Applications** and open it.
+2. **File → Open Folder…** and choose `nano-hand-lab` in your home folder.
+3. When it suggests the **Python** extension, click **Install**.
+4. **View → Terminal** opens a Terminal inside the editor, already in the right folder. You
+   can run `uv run ...` there.
+
+**Make your own copy to experiment with.** Then `git pull` never clashes with your changes:
+
+```
+cp servo_first_steps.py my_test.py
+uv run my_test.py /dev/cu.usbserial-1410
+```
+
+Save with **⌘ S** before you run it. If you break something, you still have the original.
+
+**When Python shows an error,** read the **last line** first: it says what went wrong. The
+lines above it show which line of your file it happened on.
+
+## Playing in Python
+
+Instead of running the whole script, you can send commands one at a time and see what
+happens. Start Python inside the project:
+
+```
+uv run python
+```
+
+The prompt changes to `>>>`. Type these one at a time (use your port name):
+
+```python
+from servo_first_steps import *
+ser = serial.Serial("/dev/cu.usbserial-1410", BAUD, timeout=0.05)
+
+ping(ser, 1)
+read_position(ser, 1)
+set_torque(ser, 1, True)
+move_to(ser, 1, 300)
+move_to(ser, 1, 700, speed=100)
+read_register(ser, 1, 63, 1)     # temperature
+set_torque(ser, 1, False)
+
+ser.close()
+exit()
+```
+
+`from servo_first_steps import *` borrows all the functions from the script.
+`build_packet(1, PING)` shows a packet without sending it.
 
 ## How the servos talk
 
@@ -113,6 +226,9 @@ FF FF | ID | LEN | INSTRUCTION | PARAMETERS... | CHECKSUM
 | `PARAMETERS` | For read and write: which **register** (memory address) to use, then the data. |
 | `CHECKSUM` | Add up everything after `FF FF`, keep the last byte, flip all the bits. The servo does the same sum to check nothing got scrambled. |
 
+The servo replies with the same shape, except the instruction byte is replaced by an
+**error** byte. `00` means everything is fine.
+
 Each servo has a small table of memory **registers**. You control it by writing to them and
 check on it by reading them:
 
@@ -128,26 +244,81 @@ check on it by reading them:
 Positions go from **0 to 1023** over about 300°, so **512 is the middle**. Two-byte values are
 sent **high byte first**: 400 is `01 90` because 1 × 256 + 0x90 (144) = 400.
 
+### Worked example: reading the position
+
+To ask servo 1 for 2 bytes starting at register 56 (`38` in hex):
+
+```
+FF FF  01  04  02  38 02  BE
+       ID  LEN READ addr count  checksum
+```
+
+- `LEN` is 4: two parameters (`38`, `02`) plus 2.
+- Checksum: 01 + 04 + 02 + 38 + 02 = 41 (hex). Flip the bits of 41 → BE.
+
+The reply might be:
+
+```
+FF FF  01  04  00   01 F4   05
+       ID  LEN err  data    checksum
+```
+
+The error byte is `00` (fine) and the data is `01 F4` = 1 × 256 + 244 = **500**.
+
+## What's in the script
+
+[`servo_first_steps.py`](servo_first_steps.py) is in sections, top to bottom:
+
+| Section | What it does |
+|---|---|
+| **Protocol constants** | Names for the numbers: `PING = 0x01`, `REG_PRESENT_POSITION = 56`, and so on. |
+| **Packet building** | `build_packet` puts the bytes in the right order and adds the checksum. |
+| **Talking on the bus** | `transact` sends a packet and reads the reply. `ping`, `read_register` and `write_register` use it. |
+| **Friendly helpers** | `read_position`, `set_torque` and `move_to`: the ones you'll use most. |
+| **The experiment** | `main` runs steps 1–4. Change this part to try your own moves. |
+
 ## Things to try
 
 1. **Check a checksum by hand.** For the ping `FF FF 01 02 01 FB`: 01 + 02 + 01 = 04, and
    flipping the bits of 04 gives FB.
-2. **Change the moves.** Edit the list `(512, 400, 624, 512)` in step 3 of the script, or the
-   `speed=300` in `move_to`.
-3. **Read the temperature.** Register 63, one byte: `read_register(ser, sid, 63, 1)`.
-4. **Give servos their own IDs**, one servo at a time. *(Script coming. This writes to the
+2. **Change the moves.** In your copy, edit the list `(512, 400, 624, 512)` in `main`, or the
+   `speed=300` in `move_to`. What's the fastest speed that still looks smooth?
+3. **Read the temperature and voltage.** Registers 63 and 62, one byte each. We think voltage
+   is in tenths of a volt: with the 6 V supply, do you get about `60`? Does the temperature
+   go up after the servo has been working for a while?
+4. **Wave.** Write a loop that moves between two positions five times.
+5. **Give servos their own IDs**, one servo at a time. *(Script coming. This changes the
    servo's permanent memory, so ask before you run it.)*
-5. **Chain two servos** with different IDs and move them both.
-6. **Move several servos at once** with the sync-write instruction (`83`).
+6. **Chain two servos** with different IDs and move them both.
+7. **Move several servos at once** with the sync-write instruction (`83`).
 
 ## Troubleshooting
 
 | What you see | What to check |
 |---|---|
+| `command not found: uv` | Quit Terminal (⌘ Q) and reopen it. If it still happens, redo [step 1](#1-install-uv). |
+| `No such file or directory: servo_first_steps.py` | You're in the wrong folder. Run `cd ~/nano-hand-lab`. |
+| `could not open port` | Wrong port name: run `ls /dev/cu.*` again. Or another program (or another Terminal window) has the port open: close it. |
 | `no reply: check power...` | Is the 6 V supply on? Is the jumper on **B**? Is the servo plugged in firmly? Is the ID right? |
-| `could not open port` | Wrong port name; run `ls /dev/cu.*` again. Or another program has the port open. |
 | `bad checksum` | Loose cable, or two servos with the same ID on the bus. |
 | `!! servo reports error` | It tells you what: voltage, overheat, overload... Unplug the power and let it rest. |
+| The servo replies but doesn't move | Is torque on? Is the position you asked for different from where it is now? |
+| The servo buzzes or feels hot | Something is stopping it reaching its position. Turn torque off and check nothing is in the way. |
+
+## Words you'll see
+
+| Word | Meaning |
+|---|---|
+| **Servo** | A motor with a sensor and a tiny computer, so it can move to an exact position and hold it. |
+| **Horn** | The plastic arm or disc that screws onto the servo's shaft. |
+| **Bus** | One shared set of wires that every servo plugs into. Each servo listens for its own ID. |
+| **Torque** | Twisting force. Torque on = the servo holds its position. Torque off = it goes limp. |
+| **Register** | A numbered slot in the servo's memory, like a cell in a spreadsheet. |
+| **EEPROM** | The part of the servo's memory that's kept when the power is off, like its ID. |
+| **Hex** | Numbers in base 16, written with 0–9 and A–F. `FF` = 255, `38` = 56. Every byte is two hex digits. |
+| **Baud** | How fast bytes travel on the bus. These servos use 1,000,000 bits per second. |
+| **Packet** | One complete message on the bus, from `FF FF` to the checksum. |
+| **Checksum** | A number added to the end of a packet so the receiver can spot scrambled bytes. |
 
 ## Servo ID plan
 
