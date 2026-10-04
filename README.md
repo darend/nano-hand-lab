@@ -204,7 +204,7 @@ read_position(ser, 1)
 set_torque(ser, 1, True)
 move_to(ser, 1, 300)
 move_to(ser, 1, 700, speed=100)
-read_register(ser, 1, 63, 1)     # temperature
+read_register(ser, 1, 63, 1)     # temperature: [22] means 22 °C
 set_torque(ser, 1, False)
 
 ser.close()

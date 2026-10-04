@@ -161,9 +161,12 @@ def ping(ser, servo_id):
 
 
 def read_register(ser, servo_id, address, length):
-    """READ params are: start address, how many bytes."""
+    """READ params are: start address, how many bytes.
+
+    Returns the bytes as a list of numbers, e.g. [22] or [2, 0].
+    """
     _, data = transact(ser, build_packet(servo_id, READ, [address, length]))
-    return data
+    return list(data)
 
 
 def write_register(ser, servo_id, address, values):
