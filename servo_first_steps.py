@@ -5,8 +5,10 @@ First steps with a Feetech SCS servo (Waveshare SC09 / SCS0009), using raw bytes
 No SDK on purpose: every packet is built by hand here so you can see exactly
 what goes down the wire. Run it with the port of the Bus Servo Adapter (A):
 
-    uv run servo_first_steps.py /dev/cu.usbserial-XXXX
-    uv run servo_first_steps.py /dev/cu.usbserial-XXXX --id 3 --quiet
+    uv run servo_first_steps.py /dev/cu.usbmodem5B610341031
+    uv run servo_first_steps.py /dev/cu.usbmodem5B610341031 --id 3 --quiet
+
+(Your port name will be different: run `ls /dev/cu.*` to find it.)
 
 What it does:
   1. Ping the servo                      (is anyone there?)
@@ -14,8 +16,8 @@ What it does:
   3. Move 512 -> 400 -> 624 -> 512        (WRITE instruction)
   4. Torque off, then stream the position while you turn the horn by hand
 
-Before running: jumper on B, 6 V supply plugged in, USB plugged in,
-one servo on the bus.
+Before running: jumper on B, 6 V supply plugged in AND switched on, USB plugged
+in, one servo on the bus.
 """
 
 import argparse
@@ -139,7 +141,8 @@ def transact(ser, packet):
         reply = read_packet(ser)
 
     if reply is None:
-        raise TimeoutError("no reply: check power, wiring, jumper on B, servo ID and baud rate")
+        raise TimeoutError("no reply: is the 6 V supply switched on? "
+                           "Then check the jumper is on B, the servo cable, and the servo ID")
     if VERBOSE:
         print(f"  <- {hexdump(reply)}")
 
@@ -185,7 +188,9 @@ def move_to(ser, servo_id, position, speed=300):
     """Write 6 bytes starting at 42: goal position, goal time, goal speed.
 
     Following Feetech's own example, we leave time at 0 and set a speed.
-    Position is 0-1023 over roughly 300 degrees, so 512 is about the middle.
+    Speed is roughly in steps per second: at 300, a move of 300 steps takes
+    about a second. Position is 0-1023 over roughly 300 degrees, so 512 is
+    about the middle.
     """
     position = max(0, min(1023, position))
     write_register(ser, servo_id, REG_GOAL_POSITION,
@@ -220,10 +225,15 @@ def main():
 
         print("\n3. Move it")
         set_torque(ser, sid, True)
+        speed = 300
         for target in (512, 400, 624, 512):
+            start = read_position(ser, sid)
             print(f"   -> {target}")
-            move_to(ser, sid, target)
-            time.sleep(1.0)  # give it time to arrive before reading back
+            move_to(ser, sid, target, speed)
+            # Wait long enough to arrive: distance / speed, plus a little extra.
+            # (Register 66 "moving" goes to 0 slightly before it arrives, so we
+            # don't rely on it.)
+            time.sleep(abs(target - start) / speed + 0.3)
             print(f"   now at {read_position(ser, sid)}")
 
         print("\n4. Torque off. Turn the horn by hand (Ctrl-C to stop)")

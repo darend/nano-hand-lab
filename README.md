@@ -87,7 +87,8 @@ the right version (3.14) and the libraries listed in `pyproject.toml`.
 >   servos on the bus at once will talk over each other.
 
 1. Plug one servo into the adapter.
-2. Plug in the 6 V supply.
+2. Plug in the 6 V supply **and switch it on at the wall**. The adapter's red light comes on
+   from USB alone, so it doesn't tell you the servos have power.
 3. Plug the adapter into the Mac with USB-C. If the Mac asks **"Allow accessory to
    connect?"**, click **Allow**.
 
@@ -99,20 +100,26 @@ The "port" is the name the Mac gives the adapter.
 ls /dev/cu.*
 ```
 
-Look for something like `/dev/cu.usbserial-1410` or `/dev/cu.wchusbserial1410`. That's the
-adapter. Write it down; you'll use it a lot. The number can change if you plug into a
-different USB socket.
+Look for one starting `/dev/cu.usbmodem`. Our adapter shows up as:
+
+```
+/dev/cu.usbmodem5B610341031
+```
+
+The number comes from the adapter's serial number, so a different adapter has a different
+name. This guide uses ours in its examples: swap in yours if it's different. No driver is
+needed.
 
 If you only see `Bluetooth-Incoming-Port` and `debug-console`, unplug the adapter, plug it
-back in and try again. If it still doesn't appear, install the
-[WCH CH34x driver](https://www.wch-ic.com/downloads/CH34XSER_MAC_ZIP.html) and restart the Mac.
+back in and try again. Still nothing? Try another USB-C cable: some cables only carry power,
+not data.
 
 ### 5. Run the first script
 
-Use your own port name from step 4:
+Use the port name from step 4:
 
 ```
-uv run servo_first_steps.py /dev/cu.usbserial-1410
+uv run servo_first_steps.py /dev/cu.usbmodem5B610341031
 ```
 
 The first run takes a little longer while uv downloads Python. Then the script:
@@ -135,7 +142,7 @@ It prints every message it sends (`->`) and every reply (`<-`) as hex bytes:
 Add `--quiet` to hide the bytes, or `--id 3` to talk to a servo with a different ID:
 
 ```
-uv run servo_first_steps.py /dev/cu.usbserial-1410 --quiet
+uv run servo_first_steps.py /dev/cu.usbmodem5B610341031 --quiet
 ```
 
 ## Every time you come back
@@ -169,7 +176,7 @@ free and good:
 
 ```
 cp servo_first_steps.py my_test.py
-uv run my_test.py /dev/cu.usbserial-1410
+uv run my_test.py /dev/cu.usbmodem5B610341031
 ```
 
 Save with **⌘ S** before you run it. If you break something, you still have the original.
@@ -190,7 +197,7 @@ The prompt changes to `>>>`. Type these one at a time (use your port name):
 
 ```python
 from servo_first_steps import *
-ser = serial.Serial("/dev/cu.usbserial-1410", BAUD, timeout=0.05)
+ser = serial.Serial("/dev/cu.usbmodem5B610341031", BAUD, timeout=0.05)
 
 ping(ser, 1)
 read_position(ser, 1)
@@ -280,10 +287,11 @@ The error byte is `00` (fine) and the data is `01 F4` = 1 × 256 + 244 = **500**
 1. **Check a checksum by hand.** For the ping `FF FF 01 02 01 FB`: 01 + 02 + 01 = 04, and
    flipping the bits of 04 gives FB.
 2. **Change the moves.** In your copy, edit the list `(512, 400, 624, 512)` in `main`, or the
-   `speed=300` in `move_to`. What's the fastest speed that still looks smooth?
-3. **Read the temperature and voltage.** Registers 63 and 62, one byte each. We think voltage
-   is in tenths of a volt: with the 6 V supply, do you get about `60`? Does the temperature
-   go up after the servo has been working for a while?
+   `speed = 300` line just above it. Speed is roughly steps per second. What's the fastest
+   speed that still looks smooth?
+3. **Read the temperature and voltage.** Registers 63 and 62, one byte each. Voltage is in
+   tenths of a volt, so `61` means 6.1 V. Temperature is in °C. Does it go up after the servo
+   has been working for a while?
 4. **Wave.** Write a loop that moves between two positions five times.
 5. **Give servos their own IDs**, one servo at a time. *(Script coming. This changes the
    servo's permanent memory, so ask before you run it.)*
@@ -297,7 +305,7 @@ The error byte is `00` (fine) and the data is `01 F4` = 1 × 256 + 244 = **500**
 | `command not found: uv` | Quit Terminal (⌘ Q) and reopen it. If it still happens, redo [step 1](#1-install-uv). |
 | `No such file or directory: servo_first_steps.py` | You're in the wrong folder. Run `cd ~/nano-hand-lab`. |
 | `could not open port` | Wrong port name: run `ls /dev/cu.*` again. Or another program (or another Terminal window) has the port open: close it. |
-| `no reply: check power...` | Is the 6 V supply on? Is the jumper on **B**? Is the servo plugged in firmly? Is the ID right? |
+| `no reply: is the 6 V supply switched on?` | Check the supply is plugged in **and switched on at the wall**: the red light on the adapter only means USB is connected. Then: is the jumper on **B**? Is the servo plugged in firmly? Is the ID right? |
 | `bad checksum` | Loose cable, or two servos with the same ID on the bus. |
 | `!! servo reports error` | It tells you what: voltage, overheat, overload... Unplug the power and let it rest. |
 | The servo replies but doesn't move | Is torque on? Is the position you asked for different from where it is now? |
